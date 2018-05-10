@@ -1251,12 +1251,7 @@ func (r *DockerRuntime) statusMonitor(cancel context.CancelFunc, c *runtimeTypes
 
 // return true to exit
 func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessageChan chan runtimeTypes.StatusMessage) bool {
-	if c.ID != message.ID {
-		panic(fmt.Sprint("c.ID != message.ID: ", message))
-	}
-	if message.Type != "container" {
-		panic(fmt.Sprint("message.Type != container: ", message))
-	}
+	validateMessage(c, message)
 	l := log.WithFields(
 		map[string]interface{}{
 			"action":  message.Action,
@@ -1278,12 +1273,10 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		return false
 	case "die":
 		if exitCode := message.Actor.Attributes["exitCode"]; exitCode == "0" {
-			l.Info("Writing finished message")
 			statusMessageChan <- runtimeTypes.StatusMessage{
 				Status: runtimeTypes.StatusFinished,
 			}
 		} else {
-			l.Info("Writing failed message")
 			statusMessageChan <- runtimeTypes.StatusMessage{
 				Status: runtimeTypes.StatusFailed,
 				Msg:    fmt.Sprintf("exited with code %s", exitCode),
@@ -1309,8 +1302,17 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		return false
 	}
 
-	log.Info("Finishing monitoring loop")
 	return true
+}
+
+// The only purpose of this is to test the sanity of our filters, and Docker
+func validateMessage(c *runtimeTypes.Container, message events.Message) {
+	if c.ID != message.ID {
+		panic(fmt.Sprint("c.ID != message.ID: ", message))
+	}
+	if message.Type != "container" {
+		panic(fmt.Sprint("message.Type != container: ", message))
+	}
 }
 
 const (
