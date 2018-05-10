@@ -1278,10 +1278,12 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		return false
 	case "die":
 		if exitCode := message.Actor.Attributes["exitCode"]; exitCode == "0" {
+			l.Info("Writing finished message")
 			statusMessageChan <- runtimeTypes.StatusMessage{
 				Status: runtimeTypes.StatusFinished,
 			}
 		} else {
+			l.Info("Writing failed message")
 			statusMessageChan <- runtimeTypes.StatusMessage{
 				Status: runtimeTypes.StatusFailed,
 				Msg:    fmt.Sprintf("exited with code %s", exitCode),
