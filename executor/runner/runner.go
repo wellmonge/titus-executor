@@ -338,7 +338,7 @@ func (r *Runner) monitorContainer(ctx context.Context, startTime time.Time, stat
 				r.updateStatus(ctx, titusdriver.Finished, msg)
 				return
 			case runtimeTypes.StatusFailed:
-				r.updateStatus(ctx, titusdriver.Finished, msg)
+				r.updateStatus(ctx, titusdriver.Failed, msg)
 				return
 			default:
 				r.updateStatus(ctx, titusdriver.Lost, msg)
