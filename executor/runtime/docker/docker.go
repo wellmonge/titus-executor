@@ -1275,6 +1275,7 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		statusMessageChan <- runtimeTypes.StatusMessage{
 			Status: runtimeTypes.StatusRunning,
 		}
+		return false
 	case "die":
 		if exitCode := message.Actor.Attributes["exitCode"]; exitCode == "0" {
 			statusMessageChan <- runtimeTypes.StatusMessage{
@@ -1290,7 +1291,7 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		statusMessageChan <- runtimeTypes.StatusMessage{
 			Status: runtimeTypes.StatusRunning,
 		}
-		return true
+		return false
 	case "kill":
 		statusMessageChan <- runtimeTypes.StatusMessage{
 			Status: runtimeTypes.StatusFailed,
@@ -1301,9 +1302,11 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 			Status: runtimeTypes.StatusFailed,
 			Msg:    fmt.Sprintf("%s exited due to OOMKilled", c.TaskID),
 		}
+	default:
+		log.WithField("taskID", c.ID).Info("Received unexpected event: ", message)
+		return false
 	}
-	log.WithField("taskID", c.ID).Info("Received unexpected event: ", message)
-	return false
+	return true
 }
 
 const (
