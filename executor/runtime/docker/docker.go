@@ -1259,10 +1259,11 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 	}
 	l := log.WithFields(
 		map[string]interface{}{
-			"status": message.Status,
-			"id":     message.ID,
-			"from":   message.From,
-			"type":   message.Type,
+			"action":  message.Action,
+			"status":  message.Status,
+			"id":      message.ID,
+			"from":    message.From,
+			"type":    message.Type,
 			"actorId": message.Actor.ID,
 		})
 	for k, v := range message.Actor.Attributes {
