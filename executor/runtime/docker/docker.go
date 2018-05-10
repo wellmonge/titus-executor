@@ -1241,8 +1241,8 @@ func (r *DockerRuntime) statusMonitor(cancel context.CancelFunc, c *runtimeTypes
 			log.Fatal("Got error while listening for events, bailing: ", err)
 		case event := <-eventChan:
 			log.Info("Got event: ", event)
-			shouldExit := handleEvent(c, event, statusMessageChan)
-			if shouldExit {
+			if handleEvent(c, event, statusMessageChan) {
+				log.Info("Terminating docker status monitor")
 				return
 			}
 		}
@@ -1267,7 +1267,7 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 			"actorId": message.Actor.ID,
 		})
 	for k, v := range message.Actor.Attributes {
-		l = l.WithField(k, v)
+		l = l.WithField(fmt.Sprintf("actor.attributes.%s", k), v)
 	}
 	l.Info("Processing message")
 	switch message.Action {
@@ -1306,6 +1306,8 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 		log.WithField("taskID", c.ID).Info("Received unexpected event: ", message)
 		return false
 	}
+
+	log.Info("Finishing monitoring loop")
 	return true
 }
 
