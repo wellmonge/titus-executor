@@ -1257,14 +1257,18 @@ func handleEvent(c *runtimeTypes.Container, message events.Message, statusMessag
 	if message.Type != "container" {
 		panic(fmt.Sprint("message.Type != container: ", message))
 	}
-	log.WithFields(
+	l := log.WithFields(
 		map[string]interface{}{
 			"status": message.Status,
 			"id":     message.ID,
 			"from":   message.From,
 			"type":   message.Type,
-			"actor":  message.Actor,
-		}).Info("Processing message")
+			"actorId": message.Actor.ID,
+		})
+	for k, v := range message.Actor.Attributes {
+		l = l.WithField(k, v)
+	}
+	l.Info("Processing message")
 	switch message.Action {
 	case "start":
 		statusMessageChan <- runtimeTypes.StatusMessage{
