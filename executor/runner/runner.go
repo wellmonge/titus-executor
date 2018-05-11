@@ -314,10 +314,10 @@ no_launchguard:
 	}
 	r.metrics.Counter("titus.executor.taskLaunched", 1, nil)
 
-	r.monitorContainer(ctx, startTime, statusChan)
+	r.monitorContainer(ctx, startTime, statusChan, details)
 }
 
-func (r *Runner) monitorContainer(ctx context.Context, startTime time.Time, statusChan <-chan runtimeTypes.StatusMessage) {
+func (r *Runner) monitorContainer(ctx context.Context, startTime time.Time, statusChan <-chan runtimeTypes.StatusMessage, details *runtimeTypes.Details) {
 	lastMessage := ""
 	runningSent := false
 
@@ -329,7 +329,7 @@ func (r *Runner) monitorContainer(ctx context.Context, startTime time.Time, stat
 
 			switch statusMessage.Status {
 			case runtimeTypes.StatusRunning:
-				r.handleTaskRunningMessage(ctx, msg, &lastMessage, &runningSent, startTime)
+				r.handleTaskRunningMessage(ctx, msg, &lastMessage, &runningSent, startTime, details)
 				// Error code 0
 			case runtimeTypes.StatusFinished:
 				if msg == "" {
@@ -353,7 +353,7 @@ func (r *Runner) monitorContainer(ctx context.Context, startTime time.Time, stat
 	}
 }
 
-func (r *Runner) handleTaskRunningMessage(ctx context.Context, msg string, lastMessage *string, runningSent *bool, startTime time.Time) {
+func (r *Runner) handleTaskRunningMessage(ctx context.Context, msg string, lastMessage *string, runningSent *bool, startTime time.Time, details *runtimeTypes.Details) {
 	// no need to Update the status if task is running and the message is the same as the last one
 	if msg != *lastMessage && *runningSent {
 		return
@@ -367,8 +367,7 @@ func (r *Runner) handleTaskRunningMessage(ctx context.Context, msg string, lastM
 		r.metrics.Timer("titus.executor.containerStartTime", time.Since(startTime), r.container.ImageTagForMetrics())
 	}
 
-	*runningSent = true
-	r.updateStatus(ctx, titusdriver.Running, msg)
+	r.updateStatusWithDetails(ctx, titusdriver.Running, msg, details)
 	*runningSent = true
 	*lastMessage = msg
 
